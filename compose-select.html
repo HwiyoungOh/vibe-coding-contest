@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>결재 작성하기 - 한화손보 CIRCLE</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="stylesheet" href="styles.css">
+<style>
+  .compose-page { padding: 28px 36px 40px; }
+  .compose-breadcrumb { font-size: 13px; color: var(--text-tertiary); margin-bottom: 6px; }
+  .compose-breadcrumb a { color: var(--text-tertiary); transition: color 0.15s; }
+  .compose-breadcrumb a:hover { color: var(--hw-orange); }
+  .compose-breadcrumb .sep { margin: 0 6px; }
+  .compose-title {
+    font-size: 22px; font-weight: 700; color: var(--text-primary);
+    margin-bottom: 18px; letter-spacing: -0.5px;
+  }
+
+  .form-search {
+    display: flex; align-items: center; gap: 10px;
+    border: 1px solid var(--border-line); border-radius: 4px;
+    padding: 0 14px; height: 38px; margin-bottom: 18px;
+    background: #fff; transition: border-color 0.15s;
+  }
+  .form-search:focus-within { border-color: var(--hw-orange); }
+  .form-search input {
+    flex: 1; border: none; outline: none; font-size: 14px;
+    font-family: inherit; color: var(--text-primary); background: transparent;
+  }
+  .form-search input::placeholder { color: var(--text-tertiary); }
+  .form-search svg { color: var(--text-tertiary); flex-shrink: 0; }
+  .form-search-clear {
+    display: none; color: var(--text-tertiary); padding: 2px;
+    font-size: 18px; line-height: 1; cursor: pointer;
+  }
+  .form-search-clear.visible { display: block; }
+  .form-search-clear:hover { color: var(--text-primary); }
+
+  .form-layout {
+    display: grid; grid-template-columns: 240px 1fr; gap: 0;
+    border: 1px solid var(--border-line); border-radius: 4px;
+    background: #fff; min-height: 560px;
+  }
+
+  .form-tree {
+    border-right: 1px solid var(--border-line);
+    padding: 10px 0; background: #FAFAFA;
+    overflow-y: auto; max-height: 720px;
+  }
+  .tree-item {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 9px 16px; font-size: 13.5px; font-weight: 500;
+    color: var(--text-menu); cursor: pointer;
+    border-left: 3px solid transparent;
+    transition: background 0.1s, color 0.1s;
+  }
+  .tree-item:hover { background: #F2F2F2; }
+  .tree-item.active {
+    background: #fff;
+    border-left-color: var(--hw-orange);
+    color: var(--hw-orange);
+    font-weight: 700;
+  }
+  .tree-item .count {
+    font-size: 11px; font-weight: 500; color: var(--text-tertiary);
+    background: #ECECEC; padding: 1px 7px; border-radius: 9px;
+  }
+  .tree-item.active .count { background: #FFE9D9; color: var(--hw-orange); }
+
+  .form-list { padding: 18px 20px 24px; }
+  .form-list-header {
+    display: flex; align-items: baseline; gap: 10px;
+    margin-bottom: 14px; padding-bottom: 10px;
+    border-bottom: 1px solid var(--border-light);
+  }
+  .form-list-cat { font-size: 16px; font-weight: 700; color: var(--text-primary); }
+  .form-list-count { font-size: 12px; color: var(--text-tertiary); }
+
+  .form-items {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 2px;
+  }
+  .form-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 12px; border-radius: 4px;
+    font-size: 13.5px; color: var(--text-primary);
+    cursor: pointer; transition: background 0.1s;
+    text-decoration: none;
+  }
+  .form-item:hover { background: #FFF6EE; }
+  .form-icon {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: #CCC; flex-shrink: 0;
+  }
+  .form-item:hover .form-icon { background: var(--hw-orange); }
+  .form-item .form-name { flex: 1; }
+  .form-item.featured {
+    background: linear-gradient(90deg, #FFF6EE 0%, transparent 100%);
+    font-weight: 600;
+  }
+  .form-item.featured .form-icon { background: var(--hw-orange); }
+  .form-item.featured:hover { background: #FFE9D9; }
+  .badge-jigi {
+    display: inline-flex; align-items: center; gap: 4px;
+    background: var(--hw-orange); color: #fff;
+    font-size: 10px; font-weight: 700; padding: 2px 7px;
+    border-radius: 3px; letter-spacing: -0.2px;
+  }
+  .badge-jigi::before {
+    content: ""; width: 6px; height: 6px; border-radius: 50%; background: #fff;
+  }
+
+  .form-subgroup {
+    font-size: 12px; font-weight: 700;
+    color: var(--text-tertiary);
+    grid-column: 1 / -1;
+    padding: 12px 4px 4px;
+  }
+  .form-subgroup:first-child { padding-top: 4px; }
+
+  .search-result-header {
+    font-size: 13px; color: var(--text-secondary); margin-bottom: 12px;
+  }
+  .search-result-header strong { color: var(--hw-orange); font-weight: 700; }
+  .search-empty {
+    padding: 40px 0; text-align: center;
+    color: var(--text-tertiary); font-size: 13px;
+  }
+  mark {
+    background: #FFE9D9; color: var(--hw-orange);
+    padding: 0 2px; border-radius: 2px; font-weight: 700;
+  }
+</style>
+</head>
+<body>
+
+<header class="gw-header">
+  <div class="gw-header-top">
+    <div class="gw-logo">한화손보 <span class="brand-dot">CIRCLE</span></div>
+    <div class="gw-user">
+      <div class="gw-user-avatar">오</div>
+      <div>
+        <div class="gw-user-name">오휘영</div>
+        <div class="gw-user-team">DX기획파트</div>
+      </div>
+    </div>
+  </div>
+  <nav class="gw-nav">
+    <div class="gw-nav-item">메일</div>
+    <div class="gw-nav-item">워크플레이스</div>
+    <div class="gw-nav-item active">전자결재</div>
+    <div class="gw-nav-item">게시판</div>
+    <div class="gw-nav-item">지원업무</div>
+    <div class="gw-nav-item">채널Hplus</div>
+    <div class="gw-nav-item">업무공유</div>
+  </nav>
+</header>
+
+<div class="gw-body">
+  <aside class="gw-sidebar">
+    <a href="compose-select.html" class="gw-compose-btn">결재 작성하기</a>
+    <div class="gw-side-group">
+      <div class="gw-side-title">결재함</div>
+      <div class="gw-side-item">결재할문서</div>
+      <div class="gw-side-item">일괄결재함</div>
+      <div class="gw-side-item">진행문서</div>
+    </div>
+    <div class="gw-side-group">
+      <div class="gw-side-title">완료함</div>
+      <div class="gw-side-item">승인문서</div>
+      <div class="gw-side-item">반려문서</div>
+    </div>
+    <div class="gw-side-group">
+      <div class="gw-side-title">수신/발신함</div>
+      <div class="gw-side-item">대내문서(수/발)</div>
+      <div class="gw-side-item">대내수신</div>
+      <div class="gw-side-item">대내발신</div>
+      <div class="gw-side-item">참조문서</div>
+      <div class="gw-side-item">진행중 참조문서</div>
+    </div>
+    <div class="gw-side-group">
+      <div class="gw-side-title">개인함</div>
+      <div class="gw-side-item">기안문서</div>
+      <div class="gw-side-item">최근열람문서</div>
+    </div>
+    <div class="gw-side-group">
+      <div class="gw-side-title">부서공용함</div>
+      <div class="gw-side-item">전체문서</div>
+      <div class="gw-side-item">기안문서</div>
+      <div class="gw-side-item">협조문서</div>
+      <div class="gw-side-item">수신문서</div>
+    </div>
+  </aside>
+
+  <main class="gw-main">
+    <div class="compose-page">
+      <div class="compose-breadcrumb">
+        <a href="index.html">전자결재</a>
+        <span class="sep">›</span>
+        <span>결재 작성하기</span>
+      </div>
+      <div class="compose-title">결재 작성하기</div>
+
+      <div class="form-search">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input id="search" type="text" placeholder="양식명으로 검색 (예: 계약, 품의, 휴가)" autocomplete="off">
+        <span class="form-search-clear" id="searchClear">✕</span>
+      </div>
+
+      <div class="form-layout">
+        <div class="form-tree" id="tree"></div>
+        <div class="form-list" id="list"></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+const CATEGORIES = [
+  { id: 'general', name: '양식일반', groups: [
+    { title: '품의서 계열', items: [
+      { name: '품의서', target: 'form.html' },
+    ]},
+    { title: '문서 계열', items: [
+      { name: '대내문서' },
+      { name: '대외발신' },
+      { name: '외부문서' },
+      { name: '보고서' },
+    ]},
+  ]},
+  { id: 'general-affairs', name: '총무', items: [
+    '사용인감 날인 신청(인장 보유 부서용)',
+    '사용인감 날인 신청(인장 미보유 부서용)',
+    '명함신청서', '배차신청서',
+    '인감증명서/등기부등본신청서',
+    '인감증명서/등기부등본신청서(기업보험부문용)',
+    '차량수리신청서', '경조화 발송신청서',
+    '콘도이용 / 취소 신청서',
+    '출입카드 신규(재발급,임시) 신청서',
+    '문서 이관/폐기 신청',
+    '출력물품목코드 생성 요청',
+    '전산자산 분실 신고 및 개인정보 책임 확인서',
+  ]},
+  { id: 'accounting', name: '회계', items: [
+    '개별법인카드 발급신청',
+    '개별법인카드 인수증',
+    '개별법인카드 변경 및 제신고',
+    '공직자등 대상의 경조사비 신청서',
+    '금고출입요청서(입출고내역포함)',
+  ]},
+  { id: 'insurance', name: '보험업무', items: [
+    '계속보험료취소', '계약변경요청', '계약정상화',
+    '금융정보 조회제한/제한해제 신청', '지급제한',
+    '특별승인요청서_인/저축보험',
+    '특별승인요청서_재물보험',
+    '위험관리서비스신청서', '위험조사보고서',
+    '장기재물보험 외부실사신청서',
+  ]},
+  { id: 'claims', name: '보상', items: [
+    '의료자문관리위원회 의사록',
+    '자동차보상관리위원회 의사록',
+  ]},
+  { id: 'personal-sales', name: '개인영업', groups: [
+    { title: '품의서', items: [
+      { name: '품의서(판매촉진비사전)' },
+      { name: '품의서(행사비사전)' },
+      { name: '품의서(행사비外운영비사전)' },
+      { name: '품의서(판매촉진비결과)' },
+      { name: '품의서(행사비결과)' },
+      { name: '품의서(행사비外운영비결과)' },
+    ]},
+    { title: '계약/수수료', items: [
+      { name: '부실유의계약 다건미유지 특인요청' },
+      { name: 'MDM (보안프로그램) 사용자 변경 / 삭제 요청' },
+      { name: '미지급(지급보류)수수료 지급요청' },
+      { name: '계약서류 확인 보고(지점)' },
+      { name: '계약서류 확인 통보(지역단/사업단)' },
+      { name: 'FP 수수료 지급 방식 변경' },
+    ]},
+    { title: '교차', items: [
+      { name: '교차 수수료 승인요청' },
+      { name: '교차 수수료 지급방식 변경 요청' },
+      { name: '교차 우수경력 요청' },
+      { name: '교차 재위촉 해제 승인 요청' },
+      { name: '교차 채용유의자 승인 요청' },
+      { name: '교차RM 위임(해임) 요청' },
+      { name: '교차인력 계약이관 요청' },
+      { name: '교차인력 자격부여&정지요청' },
+      { name: '유치자정보 정정 요청' },
+    ]},
+  ]},
+  { id: 'ga-sales', name: 'GA영업', groups: [
+    { title: '품의서', items: [
+      { name: '품의서(판매촉진비사전)' },
+      { name: '품의서(행사비사전)' },
+      { name: '품의서(행사비外운영비사전)' },
+      { name: '품의서(판매촉진비결과)' },
+      { name: '품의서(행사비결과)' },
+      { name: '품의서(행사비外운영비결과)' },
+    ]},
+    { title: '교육/수수료', items: [
+      { name: 'GA 교육 결과 및 예산지원 신청서' },
+      { name: '미지급(지급보류)수수료 지급요청' },
+      { name: '계약서류 확인 보고(지점)' },
+      { name: '계약서류 확인 통보(지역단/사업단)' },
+      { name: '계약서류 분실 통보' },
+    ]},
+    { title: '영업조직', items: [
+      { name: 'SM 위촉/해촉/직무전환 신청' },
+      { name: '영업가족(사용인,유자격자) 말소 신청' },
+      { name: '대리점 신규지사 코드 부여 요청' },
+      { name: '대리점 유자격자 이관 요청' },
+      { name: '대리점 지사(지점) 명칭 변경 요청' },
+      { name: '대리점 폐쇄지사 코드 해지 요청' },
+      { name: '자사사용인 모집경력 채용유의자 특인 신청' },
+      { name: '신규 판매위탁 GA 대리점 신규등록 / 겸업 / 계약체결 신청' },
+    ]},
+    { title: '수수료', items: [
+      { name: '미지급(지급보류)수수료 지급요청' },
+      { name: 'SM 경조수수료 지급요청' },
+    ]},
+  ]},
+  { id: 'biz-sales', name: '기업영업', items: [
+    '카드수납요청서', '품의서(골프행사)', '품의서(행사)',
+  ]},
+  { id: 'compliance', name: '준법/감사', items: [
+    '내부통제위원회 의사록',
+    '금품·향응·접대 수수 신고서',
+    '업계 등 외부모임 참여 신고서',
+    '대외활동 신고서', '출장 서약서',
+    '명령휴가 점검결과 보고서',
+    'AML 고위험고객 거래승인요청서',
+    '보험금 일상감사 보고',
+    '계약서류 확인 보고(지점)',
+    '계약서류 확인 통보(지역단/사업단)',
+    '일상감시 체크리스트',
+    '명령휴가 점검 계획 제출',
+    '명령휴가 년간 점검계획',
+    '사전컨설팅 신청서', '사전컨설팅 의견서',
+    '금융투자상품 계좌개설 및 자기매매신고서',
+    '클라우드 서비스 이용에 대한 준법감시인 검토 신청서',
+  ]},
+  { id: 'customer', name: '고객/소비자', items: [
+    '(콜센터) 녹취파일 청취/제공 신청서',
+    '(방문창구) 녹취파일 청취/제공 신청서',
+    '문자 메세지 발송신청서',
+    '(완전판매)계약 정상화',
+    '(완전판매)외국인 완전판매 모니터링 확인서',
+    '금융정보 조회제한/제한해제 신청',
+    '안내장[대외발신]',
+    '소비자이슈 발의', '소비자이슈 회의록',
+    '금융소비자보호 사전협의 체크리스트',
+    '위법계약해지 요구 접수서',
+    '자료열람요구서 접수',
+    '비대면 금융사고 접수(대출/해약등)',
+    '<시그니처 라이브러리> 회원 안내 메시지 발송 신청서',
+  ]},
+  { id: 'digital', name: '대표 디지털 채널', items: [
+    '대표 디지털 채널 업무 신청서',
+    '대표 디지털 채널 관리자 시스템 계정 신청서',
+  ]},
+  { id: 'cpc', name: 'CPC/자산/전략기획', items: [
+    '사회공헌활동 기금신청서',
+    '위험관리위원회 의사록',
+    '자산운용심의위원회 의사록',
+    '위험관리전문위원회 의사록',
+    '상품위원회 의사록',
+    '결재문서 열람권한 신청',
+    '타 부서 문서함 조회권한 신청서',
+    '가정관리위원회의사록',
+    '이율관리위원회의사록',
+    '인수기준결정협의체 의사록',
+    '금고출입 요청서',
+  ]},
+  { id: 'it', name: 'IT지원/보안', items: [
+    '배치작업수행요청서-야간',
+    '배치작업수행요청서-재작업',
+    '전산기계실 출입권한 신청서',
+    'CCE/CVE취약점 조치 요청서',
+    '시스템 변경 결과보고서',
+    '시스템 변경 계획보고서',
+    '시스템 작업 결과보고서',
+    '시스템 작업 계획보고서',
+    '배치작업 오류/재수행 일간 현황보고',
+    '네트워크 보안 일지', '네트워크 운영일지',
+    '일일보안점검일지', '월간보안점검',
+    '외주인력 업무개시 신청서',
+    '외주인력 철수확인서',
+    '모의해킹 결과 조치 요청서',
+    'PC공용계정 생성/변경 요청서',
+    '문서보안 해제 신청서',
+    'IT투자위원회 심의 의결서',
+    '한화캐롯손해보험 테라 운영계 권한 요청서',
+  ]},
+  { id: 'siu', name: 'SIU', items: [
+    '보험범죄방지위원회 의사록',
+  ]},
+];
+
+function countItems(cat) {
+  if (cat.items) return cat.items.length;
+  if (cat.groups) return cat.groups.reduce((s, g) => s + g.items.length, 0);
+  return 0;
+}
+
+function renderTree(activeId) {
+  const tree = document.getElementById('tree');
+  tree.innerHTML = CATEGORIES.map(cat => `
+    <div class="tree-item ${cat.id === activeId ? 'active' : ''}" data-id="${cat.id}">
+      <span>${cat.name}</span>
+      <span class="count">${countItems(cat)}</span>
+    </div>
+  `).join('');
+  tree.querySelectorAll('.tree-item').forEach(el => {
+    el.addEventListener('click', () => selectCategory(el.dataset.id));
+  });
+}
+
+function renderItem(it) {
+  const href = it.target ? `href="${it.target}"` : 'href="javascript:void(0)"';
+  const nudge = it.target ? `<span class="nudge nudge-left" style="left: calc(100% + 16px); top: 50%; margin-top: -14px;">이 양식을 눌러주세요</span>` : '';
+  return `
+    <a class="form-item" ${href} style="position: relative;">
+      <span class="form-icon"></span>
+      <span class="form-name">${escapeHtml(it.name)}</span>
+      ${nudge}
+    </a>
+  `;
+}
+
+function renderList(catId) {
+  const cat = CATEGORIES.find(c => c.id === catId);
+  const list = document.getElementById('list');
+  let html = `
+    <div class="form-list-header">
+      <div class="form-list-cat">${cat.name}</div>
+      <div class="form-list-count">${countItems(cat)}개 양식</div>
+    </div>
+    <div class="form-items">
+  `;
+  if (cat.groups) {
+    cat.groups.forEach(g => {
+      html += `<div class="form-subgroup">${g.title}</div>`;
+      g.items.forEach(it => { html += renderItem(it); });
+    });
+  } else {
+    cat.items.forEach(it => {
+      html += renderItem(typeof it === 'string' ? { name: it } : it);
+    });
+  }
+  html += `</div>`;
+  list.innerHTML = html;
+}
+
+let currentCat = 'general';
+function selectCategory(id) {
+  currentCat = id;
+  renderTree(id);
+  renderList(id);
+  document.querySelector('.form-list').scrollTop = 0;
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function highlight(text, q) {
+  const safe = escapeHtml(text);
+  if (!q) return safe;
+  const re = new RegExp('(' + q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi');
+  return safe.replace(re, '<mark>$1</mark>');
+}
+
+function flattenAll() {
+  const all = [];
+  CATEGORIES.forEach(cat => {
+    if (cat.groups) {
+      cat.groups.forEach(g => g.items.forEach(it => {
+        all.push({ name: it.name, featured: it.featured, target: it.target, catName: cat.name, group: g.title });
+      }));
+    } else {
+      cat.items.forEach(it => {
+        const obj = typeof it === 'string' ? { name: it } : it;
+        all.push({ ...obj, catName: cat.name });
+      });
+    }
+  });
+  return all;
+}
+
+function renderSearchResults(q) {
+  const list = document.getElementById('list');
+  const results = flattenAll().filter(it => it.name.toLowerCase().includes(q.toLowerCase()));
+
+  let html = `
+    <div class="search-result-header">
+      "<strong>${escapeHtml(q)}</strong>" 검색결과 ${results.length}건
+    </div>
+  `;
+
+  if (results.length === 0) {
+    html += `<div class="search-empty">일치하는 양식이 없습니다.</div>`;
+  } else {
+    html += `<div class="form-items">`;
+    results.forEach(it => {
+      const href = it.target ? `href="${it.target}"` : 'href="javascript:void(0)"';
+      html += `
+        <a class="form-item" ${href}>
+          <span class="form-icon"></span>
+          <span class="form-name">${highlight(it.name, q)} <span style="color:var(--text-tertiary);font-size:11px;font-weight:400;margin-left:4px;">${escapeHtml(it.catName)}${it.group ? ' › ' + escapeHtml(it.group) : ''}</span></span>
+        </a>
+      `;
+    });
+    html += `</div>`;
+  }
+  list.innerHTML = html;
+}
+
+const searchInput = document.getElementById('search');
+const searchClear = document.getElementById('searchClear');
+searchInput.addEventListener('input', () => {
+  const q = searchInput.value.trim();
+  searchClear.classList.toggle('visible', q.length > 0);
+  if (q.length === 0) renderList(currentCat);
+  else renderSearchResults(q);
+});
+searchClear.addEventListener('click', () => {
+  searchInput.value = '';
+  searchClear.classList.remove('visible');
+  renderList(currentCat);
+  searchInput.focus();
+});
+
+renderTree(currentCat);
+renderList(currentCat);
+</script>
+
+</body>
+</html>
